@@ -1,38 +1,45 @@
 import throttle from 'lodash.throttle';
 
-const form = document.querySelector('.feedback-form');
-const userEmail = document.querySelector('input');
-const userMessage = document.querySelector('textarea');
+const formEl = document.querySelector('.feedback-form');
+const emailEl = document.querySelector('input');
+const messageEl = document.querySelector('textarea');
 
-const userFeedback = {
-  email: '',
-  message: '',
-};
+//перевіряємо, якщо в локальному сховищі є ключ feedback-form-state, то записуємо його значення в поля форми
+const savedFormData = localStorage.getItem('feedback-form-state');
 
-form.addEventListener('input', throttle(onFeedbackInput, 500));
-
-function onFeedbackInput(evt) {
-  userFeedback[evt.target.name] = evt.target.value;
-  localStorage.setItem('feedback-form-state', JSON.stringify(userFeedback));
+if (savedFormData) {
+  const parsedformData = JSON.parse(savedFormData);
+  emailEl.value = parsedformData.email;
+  messageEl.value = parsedformData.message;
 }
 
-form.addEventListener('submit', onFormSubmit);
+//додаємо слухачі подій зміни даних в полях форми та відправлення форми
+formEl.addEventListener('input', throttle(onInputDataChange, 500));
+formEl.addEventListener('submit', onFormSubmit);
 
-function onFormSubmit(evt) {
-  evt.preventDefault();
-  evt.currentTarget.reset();
-  localStorage.removeItem('feedback-form-state');
-  console.log(userFeedback);
+function onInputDataChange() {
+  const formData = {
+    email: emailEl.value.trim(),
+    message: messageEl.value.trim(),
+  };
+
+  localStorage.setItem('feedback-form-state', JSON.stringify(formData));
 }
 
-function fillInput() {
-  const savedInfo = localStorage.getItem('feedback-form-state');
-  const parsedInfo = JSON.parse(savedInfo);
-  if (savedInfo) {
-    console.log(parsedInfo);
-    userEmail.value = parsedInfo.email;
-    userMessage.value = parsedInfo.message;
+function onFormSubmit(event) {
+  event.preventDefault();
+  if (
+    event.currentTarget.elements.email.value === '' ||
+    event.currentTarget.elements.message.value === ''
+  ) {
+    alert('You must fill all fields');
+    return;
   }
+  const formData = {
+    email: event.currentTarget.elements.email.value.trim(),
+    message: event.currentTarget.elements.message.value.trim(),
+  };
+  console.log(formData);
+  formEl.reset();
+  localStorage.removeItem('feedback-form-state');
 }
-
-fillInput();
